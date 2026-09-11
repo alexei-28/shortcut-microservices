@@ -1,4 +1,4 @@
-package com.gmail.alexei28.shortcut.microservices.user_service;
+package com.gmail.alexei28.shortcut.microservices.order_service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,13 +6,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class App {
-    private static final Logger logger = LoggerFactory.getLogger(App.class);
+public class OrderServiceApp {
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceApp.class);
 
     public static void main(String[] args) {
-        SpringApplication.run(App.class, args);
+        SpringApplication.run(OrderServiceApp.class, args);
 
-        logger.info("\n\n ===== Application started successfully! =====\nUser Service");
+        logger.info("\n\n ===== Application started successfully! =====\nOrder Service");
         logger.info(
                 "\nJava version: {}, Java vendor: {}",
                 System.getProperty("java.version"),
