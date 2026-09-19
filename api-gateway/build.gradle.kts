@@ -13,8 +13,8 @@ java {
     }
 }
 
-// Define the Spring Cloud version (e.g., 2023.0.x for Spring Boot 3.2.x)
 extra["springCloudVersion"] = "2023.0.0"
+extra["testcontainersVersion"] = "1.21.4"
 
 repositories {
     mavenCentral()
@@ -27,13 +27,16 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("io.projectreactor:reactor-test")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-// Manages Spring Cloud dependency versions automatically
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+        mavenBom("org.testcontainers:testcontainers-bom:${property("testcontainersVersion")}")
     }
 }
 

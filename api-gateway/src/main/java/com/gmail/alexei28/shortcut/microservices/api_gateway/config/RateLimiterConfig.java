@@ -3,6 +3,7 @@ package com.gmail.alexei28.shortcut.microservices.api_gateway.config;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 /*
@@ -22,15 +23,23 @@ public class RateLimiterConfig {
 
     @Bean
     public KeyResolver ipKeyResolver() {
-        // Лимит по IP-адресу клиента
-        return exchange -> Mono.just(
-                exchange.getRequest().getRemoteAddress() != null
-                        ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                        : "anonymous"
-        );
+        return exchange -> {
+            // 1. Проверяем заголовок X-Forwarded-For
+            String xForwardedFor = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+            if (StringUtils.hasText(xForwardedFor)) {
+                // Заголовок может содержать список IP через запятую: "client, proxy1, proxy2"
+                String ipAddress = xForwardedFor.split(",")[0].trim();
+                return Mono.just(ipAddress);
+            }
 
-        // Альтернатива: лимит по Заголовку/JWT (например, Authorization или X-User-Id)
-        // return exchange -> Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst("X-User-Id"))
-        //                        .defaultIfEmpty("anonymous");
+            // 2. Фолбэк на прямое сокетное соединение
+            if (exchange.getRequest().getRemoteAddress() != null
+                    && exchange.getRequest().getRemoteAddress().getAddress() != null) {
+                return Mono.just(exchange.getRequest().getRemoteAddress().getAddress().getHostAddress());
+            }
+
+            // 3. Фолбэк для анонимных вызовов
+            return Mono.just("anonymous");
+        };
     }
 }
