@@ -12,13 +12,14 @@ Mentor platform - Shortcut: https://shortcut.education/
     * Spring Boot: 3.2.9
     * Test tools:
         * JUnit 5
+        * Testcontainers
    
 * **Install application environment**
     * Выполните команду в терминале (в папке с файлом redis-docker-compose.yml):
   
        docker-compose -f redis-docker-compose.yml up -d
   
-    * Подключение через redis-cli:
+    * Подключение Redis через redis-cli:
   
        docker exec -it redis_app redis-cli -a my_master_password ping 
   
@@ -57,7 +58,6 @@ Mentor platform - Shortcut: https://shortcut.education/
   * Изучить GraphQL.
   * Изучить стратегии деплоймента: blue-green, canary, rolling update, recreate.
   * После выполнения первого ДЗ поднять Minikube (3-4 ноды) и развернуть созданный проект в Kubernetes.
-
 
 # Решение
 Почему для Gateway rate limiting на Redis?

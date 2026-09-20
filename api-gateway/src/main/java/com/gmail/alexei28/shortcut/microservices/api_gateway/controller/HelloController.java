@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
 // http://localhost:8080/hello
 @RestController
 public class HelloController {
@@ -12,7 +14,7 @@ public class HelloController {
 
     @GetMapping("/hello")
     public String sayHello() {
-        logger.info("Hello, API Gateway!");
-        return "Hello, API Gateway!";
+        logger.info("Hello, API Gateway! Date: {}", LocalDateTime.now());
+        return "Hello, API Gateway! Date: "+ LocalDateTime.now();
     }
 }

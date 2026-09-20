@@ -4,6 +4,7 @@ import com.gmail.alexei28.shortcut.microservices.api_gateway.config.RateLimiterC
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -24,11 +25,13 @@ import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@Import({RateLimiterConfig.class, RateLimiterTest.TestRouteConfig.class})
-class RateLimiterTest {
+@Import({RateLimiterConfig.class, RateLimiterIpKeyTest.TestRouteConfig.class})
+class RateLimiterIpKeyTest {
     private static final int RATE_LIMITER_REPLENISH_RATE = 1;
     private static final int RATE_LIMITER_BURST_CAPACITY = 3;
     private static final int REQUESTED_TOKENS = 1;
+    private static final String X_FORWARD_FOR = "X-Forwarded-For";
+
     @Container
     static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
             .withExposedPorts(6379);
@@ -60,7 +63,7 @@ class RateLimiterTest {
         for (int i = 0; i < RATE_LIMITER_BURST_CAPACITY; i++) {
             webTestClient.get()
                     .uri("/test-limit")
-                    .header("X-Forwarded-For", clientIp)
+                    .header(X_FORWARD_FOR, clientIp)
                     .exchange()
                     .expectStatus().isOk();
         }
@@ -68,7 +71,7 @@ class RateLimiterTest {
         // 4-й запрос превышает burstCapacity -> получаем 429 Too Many Requests
         webTestClient.get()
                 .uri("/test-limit")
-                .header("X-Forwarded-For", clientIp)
+                .header(X_FORWARD_FOR, clientIp)
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
     }
@@ -81,14 +84,14 @@ class RateLimiterTest {
 
         // Исчерпываем лимит для IP A
         for (int i = 0; i < RATE_LIMITER_BURST_CAPACITY; i++) {
-            webTestClient.get().uri("/test-limit").header("X-Forwarded-For", ipA).exchange().expectStatus()
+            webTestClient.get().uri("/test-limit").header(X_FORWARD_FOR, ipA).exchange().expectStatus()
                     .isOk();
         }
-        webTestClient.get().uri("/test-limit").header("X-Forwarded-For", ipA).exchange().expectStatus()
+        webTestClient.get().uri("/test-limit").header(X_FORWARD_FOR, ipA).exchange().expectStatus()
                 .isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
 
         // IP B все еще имеет полный бакет на 3 запроса
-        webTestClient.get().uri("/test-limit").header("X-Forwarded-For", ipB).exchange().expectStatus()
+        webTestClient.get().uri("/test-limit").header(X_FORWARD_FOR, ipB).exchange().expectStatus()
                 .isOk();
     }
 
@@ -96,14 +99,16 @@ class RateLimiterTest {
     static class TestRouteConfig {
 
         @Bean
-        public RouteLocator testRoutes(RouteLocatorBuilder builder, RedisRateLimiter redisRateLimiter, KeyResolver ipKeyResolver) {
+        public RouteLocator testRoutes(RouteLocatorBuilder builder,
+                                       RedisRateLimiter redisRateLimiter,
+                                       @Qualifier("ipKeyResolver") KeyResolver keyResolver) {
             return builder.routes()
                     .route("test_rate_limited_route", r -> r
                             .path("/test-limit")
                             .filters(f -> f
                                     .requestRateLimiter(config -> config
                                             .setRateLimiter(redisRateLimiter)
-                                            .setKeyResolver(ipKeyResolver)
+                                            .setKeyResolver(keyResolver)
                                     )
                                     .setStatus(HttpStatus.OK.value())
                             )

@@ -1,8 +1,13 @@
 package com.gmail.alexei28.shortcut.microservices.api_gateway.config;
 
+import com.gmail.alexei28.shortcut.microservices.api_gateway.ApiGatewayApplication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
@@ -14,6 +19,7 @@ import reactor.core.publisher.Mono;
 */
 @Configuration
 public class RateLimiterConfig {
+    private static final Logger logger = LoggerFactory.getLogger(RateLimiterConfig.class);
 
     /*
         Чтобы Gateway понимал, к кому применять ограничение, объявляется KeyResolver.
@@ -22,8 +28,10 @@ public class RateLimiterConfig {
     */
 
     @Bean
+    @Primary
     public KeyResolver ipKeyResolver() {
         return exchange -> {
+            logger.info("ipKeyResolver, Headers: {}", exchange.getRequest().getHeaders());
             // 1. Проверяем заголовок X-Forwarded-For
             String xForwardedFor = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
             if (StringUtils.hasText(xForwardedFor)) {
@@ -39,6 +47,21 @@ public class RateLimiterConfig {
             }
 
             // 3. Фолбэк для анонимных вызовов
+            return Mono.just("anonymous");
+        };
+    }
+
+    @Bean
+    public KeyResolver apiKeyResolver() {
+        return exchange -> {
+            logger.info("apiKeyResolver, Headers: {}", exchange.getRequest().getHeaders());
+            String apiKey = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst("X-API-Key");
+
+            if (StringUtils.hasText(apiKey)) {
+                return Mono.just(apiKey);
+            }
             return Mono.just("anonymous");
         };
     }
