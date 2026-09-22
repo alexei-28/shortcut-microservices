@@ -15,15 +15,6 @@ Mentor platform - Shortcut: https://shortcut.education/
         * Testcontainers
    
 * **Install application environment**
-    * Выполните команду в терминале (в папке с файлом redis-docker-compose.yml):
-  
-       docker-compose -f redis-docker-compose.yml up -d
-  
-    * Подключение Redis через redis-cli:
-  
-       docker exec -it redis_app redis-cli -a my_master_password ping 
-  
-       В ответ должно вернуться: PONG.
     * Вход в веб-интерфейс (Redis)
     * Откройте браузер и перейдите по адресу: http://localhost:5540
   

@@ -4,33 +4,73 @@
 # C-c C-u: copy query under the cursor as a curl command
 # C-h e (view-echo-area-messages): print request header and body
 
-# Some generic vars
 :BASE_URL_GATE_API = http://localhost:8080
-:BASE_URL_ORDER_SERVICE = http://localhost:8081
-:BASE_URL_USER_SERVICE = http://localhost:8082
 
 # Header
 :REQUEST_HEADER = <<
 Content-Type: application/json
 
+# Actuator
+GET :BASE_URL_GATE_API/actuator
+
+# Actuator health
+GET :BASE_URL_GATE_API/actuator/health
+
+# Actuator prometheus
+GET :BASE_URL_GATE_API/actuator/prometheus
+
+# Actuator info
+GET :BASE_URL_GATE_API/actuator/info
+
 # Say hello
 GET :BASE_URL_GATE_API/hello
+
+
+
+# POST SERVICE
 
 # Say hello from Order Service
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to order-service (port 8081)
 # 3. В ответе должны быть HTTP-заголовки, связанные с rate limiting, например: X-RateLimit-Remaining: 19
-GET :BASE_URL_GATE_API/orders/hello
+GET :BASE_URL_GATE_API/post/hello
 
-# Say hello from User Service
+# Say hello from Post Service
 # 1. Send request to API-Gateway (port 8080)
-# 2. Forward to order-service (port 8081)
-GET :BASE_URL_GATE_API/users/hello
+# 2. Forward to post-service (port 8081)
+GET :BASE_URL_GATE_API/post/hello
+
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Create new post without comments
+POST :BASE_URL_GATE_API/post/create
+:REQUEST_HEADER
+
+{
+  "title": "Title#1",
+  "comments": []
+}
+
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Create new post with 2 comments
+POST :BASE_URL_GATE_API/post/create
+:REQUEST_HEADER
+
+{
+  "title": "Title#2",
+  "comments": [
+    {
+      "body": "Comments#1, Post with Title#2"
+    },
+    {
+      "body": "Comments#2, Post with Title#2"
+    }
+  ]
+}
 
 
-# Order Service
-GET :BASE_URL_ORDER_SERVICE/hello
-
-
-# User Service
-GET :BASE_URL_USER_SERVICE/hello
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Get post by id
+GET :BASE_URL_GATE_API/post/3
