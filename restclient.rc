@@ -16,18 +16,26 @@ GET :BASE_URL_GATE_API/actuator
 # Actuator health
 GET :BASE_URL_GATE_API/actuator/health
 
-# Actuator prometheus
-GET :BASE_URL_GATE_API/actuator/prometheus
-
 # Actuator info
 GET :BASE_URL_GATE_API/actuator/info
+
+#
+GET :BASE_URL_GATE_API/actuator/prometheus
+
 
 # Say hello
 GET :BASE_URL_GATE_API/hello
 
 
-
 # POST SERVICE
+
+
+# Get all posts from Order Service
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to order-service (port 8081)
+# 3. В ответе должны быть HTTP-заголовки, связанные с rate limiting, например: X-RateLimit-Remaining: 19
+# Get all posts
+GET :BASE_URL_GATE_API/post
 
 # Say hello from Order Service
 # 1. Send request to API-Gateway (port 8080)
@@ -35,10 +43,10 @@ GET :BASE_URL_GATE_API/hello
 # 3. В ответе должны быть HTTP-заголовки, связанные с rate limiting, например: X-RateLimit-Remaining: 19
 GET :BASE_URL_GATE_API/post/hello
 
-# Say hello from Post Service
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to post-service (port 8081)
-GET :BASE_URL_GATE_API/post/hello
+# 3. Get post by id
+GET :BASE_URL_GATE_API/post/5
 
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to post-service (port 8081)
@@ -70,7 +78,8 @@ POST :BASE_URL_GATE_API/post/create
 }
 
 
-# 1. Send request to API-Gateway (port 8080)
-# 2. Forward to post-service (port 8081)
-# 3. Get post by id
-GET :BASE_URL_GATE_API/post/3
+# Delete post and whole it comments
+DELETE :BASE_URL_GATE_API/post/5
+
+# Delete comment by id from post
+DELETE :BASE_URL_GATE_API/post/2/comment/2

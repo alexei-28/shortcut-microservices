@@ -26,6 +26,9 @@ GET :BASE_URL/actuator/health
 # Spring Boot actuator
 GET :BASE_URL/actuator/info
 
+#
+GET :BASE_URL/actuator/prometheus
+
 # Create new post without comments
 POST :BASE_URL/post/create
 :REQUEST_HEADER
@@ -88,7 +91,7 @@ GET :BASE_URL/post/1
 GET :BASE_URL/post
 
 # Delete post and whole it comments
-DELETE :BASE_URL/post/1
+DELETE :BASE_URL/post/6
 
 # Delete comment by id from post
-DELETE :BASE_URL/post/2/comment/2
+DELETE :BASE_URL/post/7/comment/1

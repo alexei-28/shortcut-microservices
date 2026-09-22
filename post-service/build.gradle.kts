@@ -23,6 +23,7 @@ val openapiVersion = "2.6.0"
 dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
+    implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.mapstruct:mapstruct:${mapstructVersion}")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiVersion}")
     implementation("org.springframework.boot:spring-boot-starter")

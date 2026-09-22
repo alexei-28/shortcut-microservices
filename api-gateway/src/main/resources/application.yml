@@ -1,50 +1,86 @@
 server:
   port: 8080
-
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.web.reactive: DEBUG
-
-# Actuator settings
-management:
-  endpoints:
-    web:
-      exposure:
-        include:
-          - health
-          - info
+  shutdown: graceful
 
 spring:
   application:
     name: api-gateway
 
+  # Настройка работы с Redis (Rate Limiter / Cache / Sessions)  
   data:
     redis:
       host: localhost
       port: 6379
       password: my_master_password
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
 
+  # Spring Cloud Gateway
   cloud:
-    gateway:
-      metrics:
-        enabled: true
-      default-filters:
-        # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
-        - name: RequestRateLimiter
-          args:
-            # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
-            redis-rate-limiter.replenishRate: 10
-            # Максимальная емкость ведра (Capacity), определяющая допустимый размер мгновенного всплеска
-            redis-rate-limiter.burstCapacity: 20
-            # Сколько токенов списывается за 1 HTTP-запрос (по умолчанию 1)
-            redis-rate-limiter.requestedTokens: 1
-            # Ссылка на Spring Bean ключ
-            key-resolver: "#{@ipKeyResolver}"
-      routes:
-        - id: post-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/post/**
-          #filters:
-          #  - StripPrefix=1
+      gateway:
+        metrics:
+          enabled: true
+        default-filters:
+          # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
+          - name: RequestRateLimiter
+            args:
+              # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
+              redis-rate-limiter.replenishRate: 10
+              # Максимальная емкость ведра (Capacity), определяющая допустимый размер мгновенного всплеска
+              redis-rate-limiter.burstCapacity: 20
+              # Сколько токенов списывается за 1 HTTP-запрос (по умолчанию 1)
+              redis-rate-limiter.requestedTokens: 1
+              # Ссылка на Spring Bean ключ
+              key-resolver: "#{@ipKeyResolver}"
+        routes:
+          - id: post-service
+            uri: http://localhost:8081
+            predicates:
+              - Path=/post/**
+            #filters:
+            #  - StripPrefix=1
+          
+# Вынесение Actuator на служебный порт (не доступен извне ingress/load-balancer)
+management:
+  endpoints:
+    web:
+      exposure:
+        # Включаем только необходимые эндпоинты
+        include: health, info, prometheus
+        
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true # Включает livenessState и readinessState для Kubernetes
+    prometheus:
+      enabled: true
+
+   # Настройка экспорта метрик для Prometheus & Grafana     
+  metrics:
+    tags:
+      application: ${spring.application.name:api-gateway}
+      env: ${SPRING_PROFILES_ACTIVE:production}
+    enable:
+      all: true
+    distribution:
+    # Процентили (P50, P95, P99) для точного расчета SLA/SLO в Grafana
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      percentiles-histogram:
+        http.server.requests: true
+      # Ограничение диапазона времени отклика для гистограмм
+      sla:
+        http.server.requests: 10ms, 50ms, 100ms, 200ms, 500ms, 1s, 2s
+
+# Логирование для Production
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.reactive: WARN
+          

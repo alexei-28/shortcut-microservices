@@ -1,4 +1,5 @@
 # Run by the next command:
+# docker-compose -f postgresql-post-service-docker-compose.yml down
 # docker-compose -f postgresql-post-service-docker-compose.yml up -d
 
 # Проверить наличие базы:
@@ -12,12 +13,13 @@ services:
   postgres-db:
     image: postgres:16
     container_name: post-service-postgresql
+    restart: always # Keeps container alive across reboots
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=post_service_db
     ports:
-      - "5435:5432" # Снаружи будет 5434, внутри контейнера — 5432
+      - "5435:5432" # Снаружи будет 5435, внутри контейнера — 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

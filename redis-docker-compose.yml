@@ -1,5 +1,5 @@
 # Проверить наличие Redis:
-# docker-compose -f redis-docker-compose.yml up -d
+# docker-compose -f redis-prometheus-grafana-docker-compose.yml up -d
 
 # Подключение Redis через redis-cli:
 # docker exec -it redis_app redis-cli -a my_master_password ping
