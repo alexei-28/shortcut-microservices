@@ -1,0 +1,25 @@
+# Run by the next command:
+# docker-compose -f postgresql-post-service-docker-compose.yml up -d
+
+# Проверить наличие базы:
+# docker exec -it post-service-postgresql psql -U postgres -l
+# В списке должна быть post_service_db
+
+# При первом запуске Docker скачает образ и автоматически создаст базу post_service_db
+# To stop Postgresql install on host: sudo systemctl stop postgresql
+
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: post-service-postgresql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=post_service_db
+    ports:
+      - "5435:5432" # Снаружи будет 5434, внутри контейнера — 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
