@@ -1,0 +1,61 @@
+# ELK — стек для сбора, хранения, поиска и визуализации логов:
+# E — Elasticsearch — хранит и индексирует логи, позволяет быстро искать по ним.
+# L — Logstash — получает логи от приложений, обрабатывает/фильтрует их и отправляет дальше.
+# K — Kibana — веб-интерфейс для поиска, анализа и визуализации логов.
+
+# Запуск ELK
+# docker compose -f elk-docker-compose.yml up -d
+
+# Проверка контейнеров
+# docker compose -f elk-docker-compose.yml ps
+
+# Должно быть примерно (3 контейнера):
+# elasticsearch   Up
+# logstash        Up
+# kibana          Up
+
+# ELK отвечает в основном на вопрос "что произошло в логах?"
+# ELK: ошибки, application logs, stack traces, поиск по логам.
+
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xms512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - elk-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-network
+
+networks:
+  elk-network:
+    driver: bridge

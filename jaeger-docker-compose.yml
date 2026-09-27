@@ -1,0 +1,20 @@
+# Запуск Jaeger
+# docker compose -f jaeger-docker-compose.yml up -d
+
+# Проверка контейнеров
+# docker compose -f jaeger-docker-compose.yml ps
+
+# Distributed tracing. Позволяет видеть путь одного HTTP-запроса через несколько сервисов.
+# Jaeger — «как запрос прошёл через систему и где потратил время?»
+# Jaeger: latency, request flow, service-to-service calls, bottleneck'и.
+
+version: '3.8'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP

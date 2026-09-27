@@ -39,28 +39,21 @@ Mentor platform - Shortcut: https://shortcut.education/
     * Grafana - http://localhost:3000
     * * Username: admin@localhost
     * * Password: your_secure_password
+    * Jaeger- http://localhost:16686
+    * Kibana - http://localhost:5601
     * Топ-5 наиболее популярных и функциональных готовых дашбордов Grafana для мониторинга приложений на Spring Boot (через Micrometer и Prometheus)
-  
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | # | Название дашборда              | ID в Grafana | Назначение и ключевые метрики                                                       |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | 1 | JVM (Micrometer)               |         4701 | Базовый стандарт. Детальный мониторинг JVM: Heap/Non-Heap память, .                 |
-    |   |                                |              | Garbage Collection (GC), активные потоки (Threads), CPU использование               |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | 2 | Spring Boot 3.x Statistics     |        19004 | Для Spring Boot 3+. Отслеживание HTTP-запросов (RPS, Latency,                       |
-    |   |                                |              | коды ответов 2xx/4xx/5xx), соединения HikariCP, работы Tomcat и метрик JVM.         |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | 3 | Spring Boot 2.1 System Monitor |        11378 | Универсальный APM. Удобная визуализация суммарного состояния системы:               |
-    |   |                                |              | RPS, время отклика, использование пула соединений БД и кучи JVM.                    |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | 4 | SpringBoot APM Dashboard       |        12900 | Для Kubernetes & Microservices. Удобен при деплое микросервисов в K8s.              |
-    |   |                                |              | Содержит удобные фильтры по нодам, неймспейсам и конкретным инстансам.              |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
-    | 5 | Spring Boot Statistics         |         6756 | Классический дашборд. Охватывает метрики Actuator:                                  |
-    |   |                                |              | пулы соединений HikariCP, статистика REST-контроллеров, Uptime и системные ресурсы. |
-    |---+--------------------------------+--------------+-------------------------------------------------------------------------------------|
 
+  | # | Dashboard Name                  | Grafana ID | Description |
+  |---|----------------------------------|-----------:|-------------|
+  | 1 | JVM (Micrometer)                | 4701 | General-purpose dashboard. Monitors JVM metrics: Heap/Non-Heap memory, Garbage Collection (GC), Threads, CPU utilization. |
+  | 2 | Spring Boot 3.x Statistics      | 19004 | For Spring Boot 3+. Monitors HTTP metrics (RPS, Latency, 2xx/4xx/5xx status codes), HikariCP, Tomcat, and JVM metrics. |
+  | 3 | Spring Boot 2.1 System Monitor  | 11378 | General APM dashboard. Provides application-level metrics such as RPS, response time, database connection pool, and JVM metrics. |
+  | 4 | SpringBoot APM Dashboard        | 12900 | Designed for Kubernetes & Microservices. Provides monitoring for applications running in K8s, including request rates, latency, and application metrics. |
+  | 5 | Spring Boot Statistics           | 6756 | General-purpose dashboard. Uses Actuator metrics: HikariCP connection pool, REST requests, uptime, and application metrics. |
+  
+    
    
+
 ---
 * **ДЗ**
   * Изучить материалы по систем-дизайну из репозитория ментора:
@@ -97,6 +90,73 @@ Mentor platform - Shortcut: https://shortcut.education/
 Именно поэтому в Spring Cloud Gateway часто используют Redis для rate limiting: не потому, что без Redis rate limiting невозможен, 
 а потому что Redis даёт быстрое, общее для всех Gateway и атомарное хранилище состояния.
 
-
 В Spring Cloud Gateway фильтр RequestRateLimiter реализует ограничение количества запросов по алгоритму Token Bucket с использованием Redis.
 При превышении лимита Spring Cloud Gateway автоматически возвращает клиенту статус HTTP 429 Too Many Requests.
+
+В shortcut-microservices сейчас фактически можно показать два разных observability-потока:
+
+                 ┌──────────────────────┐
+                 │   Spring Boot app    │
+                 │   api-gateway        │
+                 │   post-service       │
+                 └──────────┬───────────┘
+                            │
+             ┌──────────────┴──────────────┐
+             │                             │
+            Logs                         Traces
+             │                             │
+             ▼                             ▼
+        Logstash                         OTel
+             │                             │
+             ▼                             ▼
+       Elasticsearch                    Jaeger
+             │                             │
+             ▼                             ▼
+          Kibana                        Jaeger UI
+
+
+### ELK flow:
+
+    Spring Boot
+         │
+         │ JSON logs
+         ▼
+    Logstash :5000
+         │
+         │ parse / enrich
+         ▼
+    Elasticsearch :9200
+         │
+         ▼
+     Kibana :5601
+
+ELK отвечает в основном на вопрос "что произошло в логах?"
+
+### Jaeger flow:
+
+    Trace
+    │
+    ├── GET /post/123
+    │      120 ms
+    │
+    ├────── PostController
+    │        115 ms
+    │
+    ├──────── PostService.getPostById()
+    │          110 ms
+    │
+    └────────── PostgreSQL
+                95 ms
+
+Jaeger позволяет увидеть весь путь одного запроса.
+
+### Главное различие
+
+| ELK                 | Jaeger                        |
+| ------------------- | ----------------------------- |
+| Logs                | Distributed tracing           |
+| Что произошло?      | Где и сколько времени заняло? |
+| ERROR / INFO / WARN | Trace / Span                  |
+| Поиск событий       | Поиск запросов                |
+| Elasticsearch       | Jaeger storage                |
+| Kibana              | Jaeger UI                     |

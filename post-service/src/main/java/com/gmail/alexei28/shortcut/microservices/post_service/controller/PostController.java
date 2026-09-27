@@ -41,6 +41,7 @@ public class PostController {
     @GetMapping("/{id}")
     @Operation(summary = "Get post by id")
     public PostEntity getPostById(@PathVariable Long id) {
+        logger.info("getPostById, id  = {}", id);
         return postService.getPostById(id);
     }
 

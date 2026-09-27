@@ -30,7 +30,12 @@ management:
         http.server.requests: true # Генерирует гистограммы latency (buckets) для Grafana
       slo:
         http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s
-
+  tracing:
+    sampling:
+      probability: 1.0 # трассировать 100% запросов.
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 logging:
   level:
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

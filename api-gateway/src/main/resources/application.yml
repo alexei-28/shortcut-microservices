@@ -76,6 +76,12 @@ management:
       # Ограничение диапазона времени отклика для гистограмм
       sla:
         http.server.requests: 10ms, 50ms, 100ms, 200ms, 500ms, 1s, 2s
+  tracing:
+    sampling:
+      probability: 1.0 # трассировать 100% запросов.
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 
 # Логирование для Production
 logging:
