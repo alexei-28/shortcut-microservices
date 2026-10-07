@@ -20,6 +20,8 @@ repositories {
 val mapstructVersion = "1.6.3"
 val openapiVersion = "2.6.0"
 
+extra["springCloudVersion"] = "2023.0.0"
+
 dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
@@ -30,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.cloud:spring-cloud-starter-vault-config")
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     runtimeOnly("org.postgresql:postgresql")
@@ -38,6 +41,11 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
+}
 
 tasks.withType<Test> {
     useJUnitPlatform()

@@ -5,13 +5,15 @@ server:
 spring:
   application:
     name: api-gateway
+  config:
+    import: vault://
 
   # Настройка работы с Redis (Rate Limiter / Cache / Sessions)  
   data:
     redis:
       host: localhost
       port: 6379
-      password: my_master_password
+      password: ${redis.password} # get from Vault
       timeout: 2000ms
       lettuce:
         pool:
@@ -19,31 +21,40 @@ spring:
           max-idle: 8
           min-idle: 2
 
-  # Spring Cloud Gateway
   cloud:
-      gateway:
-        metrics:
-          enabled: true
-        default-filters:
-          # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
-          - name: RequestRateLimiter
-            args:
-              # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
-              redis-rate-limiter.replenishRate: 10
-              # Максимальная емкость ведра (Capacity), определяющая допустимый размер мгновенного всплеска
-              redis-rate-limiter.burstCapacity: 20
-              # Сколько токенов списывается за 1 HTTP-запрос (по умолчанию 1)
-              redis-rate-limiter.requestedTokens: 1
-              # Ссылка на Spring Bean ключ
-              key-resolver: "#{@ipKeyResolver}"
-        routes:
-          - id: post-service
-            uri: http://localhost:8081
-            predicates:
-              - Path=/post/**
+    # Spring Cloud Gateway
+    gateway:
+      metrics:
+        enabled: true
+      default-filters:
+        # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
+        - name: RequestRateLimiter
+          args:
+            # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
+            redis-rate-limiter.replenishRate: 10
+            # Максимальная емкость ведра (Capacity), определяющая допустимый размер мгновенного всплеска
+            redis-rate-limiter.burstCapacity: 20
+            # Сколько токенов списывается за 1 HTTP-запрос (по умолчанию 1)
+            redis-rate-limiter.requestedTokens: 1
+            # Ссылка на Spring Bean ключ
+            key-resolver: "#{@ipKeyResolver}"
+      routes:
+        - id: post-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/post/**
             #filters:
             #  - StripPrefix=1
-          
+
+    # Spring Cloud Vault (secrets)
+    vault:
+      uri: http://localhost:8200
+      token: root
+      kv:
+        enabled: true
+        backend: secret
+        default-context: application
+
 # Вынесение Actuator на служебный порт (не доступен извне ingress/load-balancer)
 management:
   endpoints:

@@ -41,6 +41,9 @@ Mentor platform - Shortcut: https://shortcut.education/
     * * Password: your_secure_password
     * Jaeger- http://localhost:16686
     * Kibana - http://localhost:5601
+    * Vault UI - http://localhost:8200
+    * * Method: Token
+    * * Password: root
     * Топ-5 наиболее популярных и функциональных готовых дашбордов Grafana для мониторинга приложений на Spring Boot (через Micrometer и Prometheus)
 
   | # | Dashboard Name                  | Grafana ID | Description |
@@ -160,3 +163,38 @@ Jaeger позволяет увидеть весь путь одного запр
 | Поиск событий       | Поиск запросов                |
 | Elasticsearch       | Jaeger storage                |
 | Kibana              | Jaeger UI                     |
+
+
+# Как Spring Cloud Vault использует application name
+Examples:
+
+For post-service:
+
+    spring.application.name=post-service
+             │
+             ▼
+            Vault
+             │
+             ▼
+            secret/post-service
+
+For api-gateway:
+
+    spring.application.name=api-gateway
+             │
+             ▼
+        secret/api-gateway
+
+
+Это очень удобно для архитектуры:
+    
+    Vault
+    │
+    ├── secret/
+    │   ├── api-gateway
+    │   │   └── redis credentials
+    │   │
+    │   └── post-service
+    │       └── PostgreSQL credentials
+    │
+    └── ...

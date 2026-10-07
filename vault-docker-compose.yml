@@ -1,0 +1,50 @@
+# Запуск Vault
+# docker compose -f vault-docker-compose.yml up -d vault
+
+# Проверка контейнера
+# docker logs vault
+
+# Vault будет доступен:
+# http://localhost:8200
+
+# Создай secrets через Vault UI.
+# Или через CLI:
+# docker exec -it vault sh
+
+# Внутри контейнера
+# export VAULT_ADDR=http://127.0.0.1:8200
+# export VAULT_TOKEN=root
+
+# Затем
+# vault status
+
+# E.g.
+# Get value of key redis.password from Vault for api-gateway
+# vault kv get -field=redis.password secret/api-gateway
+
+# Get value of key db.password from Vault for post-service
+# vault kv get -field=db.password secret/post-service
+
+# В dev mode Vault хранит данные в памяти контейнера. Поэтому после перезапуска/пересоздания контейнера секреты исчезают.
+# Лучше сделать persistent Vault, чтобы после перезагрузки Ubuntu секреты оставались.
+
+services:
+  vault:
+    image: hashicorp/vault:1.20
+    container_name: vault
+    restart: unless-stopped
+
+    ports:
+      - "8200:8200"
+
+    cap_add:
+      - IPC_LOCK
+
+    volumes:
+      - vault-data:/vault/data
+      - ./vault/config:/vault/config
+
+    command: vault server -config=/vault/config/vault.hcl
+
+volumes:
+  vault-data:

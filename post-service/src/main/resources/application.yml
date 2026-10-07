@@ -47,6 +47,18 @@ logging:
 spring:
   application:
     name: post-service
+  config:
+    import: vault://
+
+  cloud:
+    # Spring Cloud Vault (secrets)
+    vault:
+      uri: http://localhost:8200
+      token: root
+      kv:
+        enabled: true
+        backend: secret
+        default-context: application
   docker:
     # Only for development
     # Если docker образа не существует, Spring Boot автоматически скачает и создаст его при запуске приложения.
@@ -77,5 +89,5 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/post_service_db
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: postgres
+    username: ${db.username} # get from Vault
+    password: ${db.password} # get from Vault
