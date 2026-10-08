@@ -54,11 +54,13 @@ spring:
     # Spring Cloud Vault (secrets)
     vault:
       uri: http://localhost:8200
-      token: root
+      # Чтобы Spring Boot смог прочитать токен из Vault, ему уже нужен токен для выполнения запроса к Vault API
+      token: ${VAULT_TOKEN} # env variable in IntelliJ IDEA
       kv:
         enabled: true
         backend: secret
         default-context: application
+
   docker:
     # Only for development
     # Если docker образа не существует, Spring Boot автоматически скачает и создаст его при запуске приложения.

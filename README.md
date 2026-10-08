@@ -42,8 +42,7 @@ Mentor platform - Shortcut: https://shortcut.education/
     * Jaeger- http://localhost:16686
     * Kibana - http://localhost:5601
     * Vault UI - http://localhost:8200
-    * * Method: Token
-    * * Password: root
+    * * Unseal Key Portion - Enter 3 times "Unseal Key x"
     * Топ-5 наиболее популярных и функциональных готовых дашбордов Grafana для мониторинга приложений на Spring Boot (через Micrometer и Prometheus)
 
   | # | Dashboard Name                  | Grafana ID | Description |
