@@ -10,6 +10,14 @@ Mentor platform - Shortcut: https://shortcut.education/
     * Java 21
     * Gradle: 8.5
     * Spring Boot: 3.2.9
+    * REST API
+    * GraphQL (client specifies exactly what data it needs)
+    * ELK (стек для сбора, хранения, поиска и визуализации логов)
+    * Jaeger (Позволяет видеть путь одного HTTP-запроса через несколько сервисов) 
+    * Prometheus
+    * Grafana
+    * Vault (secrets)
+    * Redis (NoSQL)
     * Test tools:
         * JUnit 5
         * Testcontainers

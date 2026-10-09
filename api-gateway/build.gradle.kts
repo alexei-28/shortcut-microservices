@@ -27,6 +27,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    // Spring-cloud-starter-gateway содержит встроенный Rate Limiter.По умолчанию RedisRateLimiter, реализованный на Redis.
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
     implementation("org.springframework.cloud:spring-cloud-starter-vault-config")
     implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")

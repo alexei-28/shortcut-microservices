@@ -45,17 +45,16 @@ GET :BASE_URL_GATE_API/post/hello
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to post-service (port 8081)
 # 3. Get post by id
-GET :BASE_URL_GATE_API/post/953
+GET :BASE_URL_GATE_API/post/1052
 
-# Get post by id via GraphQL. Return only specific fields.
-# Всегда отправляется на один POST-эндпоинт
-# Всегда возвращает статус 200 OK.
+# Get post by id via GraphQL. Client specifies exactly what data it needs. Return only specific fields.
+# Всегда отправляется на один POST-эндпоинт и всегда возвращает статус 200 OK.
 # HTTP Level: Статус 200 OK указывает на то, что GraphQL-сервер успешно принял и обработал HTTP-запрос.
 POST :BASE_URL_GATE_API/graphql
 :REQUEST_HEADER
 
 {
-  "query": "query { postById(id: 915) { id title } }"
+  "query": "query { postById(id: 1052) { id title } }"
 }
 
 

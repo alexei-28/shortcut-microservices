@@ -31,7 +31,14 @@ spring:
       metrics:
         enabled: true
       default-filters:
-        # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
+        # Стандартная реализация RequestRateLimiter из коробки в Spring Cloud Gateway использует Redis.
+        # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket.
+        # Основной класс, который предоставляет Spring Cloud Gateway «из коробки», — это RedisRateLimiter.
+        # Почему именно Redis?
+        # 1. Распределенный лимитинг: Поскольку API Gateway обычно масштабируется на несколько экземпляров (nodes),
+        #    Redis служит единым распределенным хранилищем состояния счетчиков/токенов.
+        # 2. Атомарность (Lua-скрипт): Алгоритм Token Bucket реализован прямо внутри Redis с помощью встроенного Lua-скрипта.
+        #    Это гарантирует атомарность проверки и списания токенов без состояний гонки (race conditions) между копиями API Gateway.
         - name: RequestRateLimiter
           args:
             # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
@@ -54,7 +61,7 @@ spring:
     vault:
       uri: http://localhost:8200
       # Чтобы Spring Boot смог прочитать токен из Vault, ему уже нужен токен для выполнения запроса к Vault API
-      token: ${VAULT_TOKEN} # env variable in IntelliJ IDEA
+      token: ${VAULT_TOKEN} # env variable
       kv:
         enabled: true
         backend: secret
