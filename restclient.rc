@@ -109,4 +109,26 @@ GET http://localhost:9200/microservices-logs-*/_search?pretty
 
 
 # Проверить Kibana
-GET http://localhost:5601/api/status  
+GET http://localhost:5601/api/status
+
+
+# Redis проверки работы Redis в Spring Cloud Gateway.
+# Проверка активного подключения в Health Indicator. В ответе найдите блок redis. Статус должен быть UP:
+GET :BASE_URL_GATE_API/actuator/health/redis
+
+# Проверка срабатывания Rate Limiter (429 Too Many Requests)
+# Поскольку лимитер настроен на replenishRate: 10 и burstCapacity: 20, отправьте пачку быстрых запросов, чтобы превысить лимит:
+# In Bash file
+# Выполнить 30 запросов подряд в цикле
+# for i in {1..30}; do curl -i /dev/null -w "%{http_code}\n" http://localhost:8080/post/757; done
+
+# Ожидаемый результат:
+# Сначала вернутся коды 200 (или статус вашего целевого сервиса), а затем пойдут ответы с кодом 429 (Too Many Requests).
+
+
+# 1.Запустите консоль Redis:
+# redis-cli -a <ваш_пароль_из_vault>
+# 2.Включите режим отслеживания команд в реальном времени:
+# MONITOR
+# 3. Отправьте HTTP-запрос к Gateway (http://localhost:8080/post/1).
+# Результат: В консоли Redis вы увидите выполнение Lua-скрипта Spring Cloud Gateway:

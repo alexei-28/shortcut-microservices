@@ -66,11 +66,15 @@ management:
         
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always # Позволит сразу увидеть все health-компоненты
       probes:
         enabled: true # Включает livenessState и readinessState для Kubernetes
     prometheus:
       enabled: true
+
+  health:
+    redis:
+      enabled: true # Явное включение реактивного Redis Health Indicator
 
    # Настройка экспорта метрик для Prometheus & Grafana     
   metrics:
@@ -101,4 +105,7 @@ logging:
     root: INFO
     org.springframework.cloud.gateway: INFO
     org.springframework.web.reactive: WARN
-          
+    # При каждом запросе в консоли приложения будет выводиться лог получения токенов из Redis
+    # DEBUG o.s.c.g.f.r.RedisRateLimiter - response: RateLimiterResponse{allowed=true, tokensRemaining=19}
+    org.springframework.cloud.gateway.filter.ratelimit: DEBUG
+
