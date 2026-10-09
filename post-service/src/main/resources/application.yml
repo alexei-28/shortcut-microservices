@@ -43,13 +43,17 @@ logging:
     com.gmail.alexei28.shortcut.microservices: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.boot.autoconfigure.graphql: TRACE
 
 spring:
   application:
     name: post-service
   config:
     import: vault://
-
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
   cloud:
     # Spring Cloud Vault (secrets)
     vault:

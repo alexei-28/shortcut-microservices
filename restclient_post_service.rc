@@ -85,7 +85,21 @@ POST :BASE_URL/post/1/comments
 }
 
 # Get post by id
-GET :BASE_URL/post/1
+GET :BASE_URL/post/1003
+
+# Get post by id via GraphQL.
+# Всегда отправляется на один POST-эндпоинт
+POST :BASE_URL/graphql
+:REQUEST_HEADER
+
+{
+  "query": "query { postById(id: 953) { id title } }"
+}
+
+# Or by curl
+curl -i -X POST http://localhost:8081/graphql \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"{ postById(id: \"1003\") { id title comments { id body } } }"}'
 
 # Get all posts
 GET :BASE_URL/post
@@ -95,3 +109,6 @@ DELETE :BASE_URL/post/6
 
 # Delete comment by id from post
 DELETE :BASE_URL/post/7/comment/1
+
+
+

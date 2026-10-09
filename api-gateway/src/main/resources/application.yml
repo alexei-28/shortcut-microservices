@@ -7,6 +7,10 @@ spring:
     name: api-gateway
   config:
     import: vault://
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
 
   # Настройка работы с Redis (Rate Limiter / Cache / Sessions)  
   data:
@@ -42,7 +46,7 @@ spring:
         - id: post-service
           uri: http://localhost:8081
           predicates:
-            - Path=/post/**
+            - Path=/post/**,/graphql
             #filters:
             #  - StripPrefix=1
 
@@ -108,4 +112,5 @@ logging:
     # При каждом запросе в консоли приложения будет выводиться лог получения токенов из Redis
     # DEBUG o.s.c.g.f.r.RedisRateLimiter - response: RateLimiterResponse{allowed=true, tokensRemaining=19}
     org.springframework.cloud.gateway.filter.ratelimit: DEBUG
+    org.springframework.boot.autoconfigure.graphql: TRACE
 
