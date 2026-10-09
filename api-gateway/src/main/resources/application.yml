@@ -1,0 +1,116 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: vault://
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+
+  # Настройка работы с Redis (Rate Limiter / Cache / Sessions)  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${redis.password} # get from Vault
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  cloud:
+    # Spring Cloud Gateway
+    gateway:
+      metrics:
+        enabled: true
+      default-filters:
+        # В Spring Cloud Gateway RequestRateLimiter с Redis по умолчанию использует алгоритм Token Bucket
+        - name: RequestRateLimiter
+          args:
+            # Сколько токенов добавляется в ведро за 1 секунду (Refill Rate)
+            redis-rate-limiter.replenishRate: 10
+            # Максимальная емкость ведра (Capacity), определяющая допустимый размер мгновенного всплеска
+            redis-rate-limiter.burstCapacity: 20
+            # Сколько токенов списывается за 1 HTTP-запрос (по умолчанию 1)
+            redis-rate-limiter.requestedTokens: 1
+            # Ссылка на Spring Bean ключ
+            key-resolver: "#{@ipKeyResolver}"
+      routes:
+        - id: post-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/post/**,/graphql
+            #filters:
+            #  - StripPrefix=1
+
+    # Spring Cloud Vault (secrets)
+    vault:
+      uri: http://localhost:8200
+      # Чтобы Spring Boot смог прочитать токен из Vault, ему уже нужен токен для выполнения запроса к Vault API
+      token: ${VAULT_TOKEN} # env variable in IntelliJ IDEA
+      kv:
+        enabled: true
+        backend: secret
+        default-context: application
+
+# Вынесение Actuator на служебный порт (не доступен извне ingress/load-balancer)
+management:
+  endpoints:
+    web:
+      exposure:
+        # Включаем только необходимые эндпоинты
+        include: health, info, prometheus
+        
+  endpoint:
+    health:
+      show-details: always # Позволит сразу увидеть все health-компоненты
+      probes:
+        enabled: true # Включает livenessState и readinessState для Kubernetes
+    prometheus:
+      enabled: true
+
+  health:
+    redis:
+      enabled: true # Явное включение реактивного Redis Health Indicator
+
+   # Настройка экспорта метрик для Prometheus & Grafana     
+  metrics:
+    tags:
+      application: ${spring.application.name:api-gateway}
+      env: ${SPRING_PROFILES_ACTIVE:production}
+    enable:
+      all: true
+    distribution:
+    # Процентили (P50, P95, P99) для точного расчета SLA/SLO в Grafana
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      percentiles-histogram:
+        http.server.requests: true
+      # Ограничение диапазона времени отклика для гистограмм
+      sla:
+        http.server.requests: 10ms, 50ms, 100ms, 200ms, 500ms, 1s, 2s
+  tracing:
+    sampling:
+      probability: 1.0 # трассировать 100% запросов.
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
+# Логирование для Production
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.reactive: WARN
+    # При каждом запросе в консоли приложения будет выводиться лог получения токенов из Redis
+    # DEBUG o.s.c.g.f.r.RedisRateLimiter - response: RateLimiterResponse{allowed=true, tokensRemaining=19}
+    org.springframework.cloud.gateway.filter.ratelimit: DEBUG
+    org.springframework.boot.autoconfigure.graphql: TRACE
+

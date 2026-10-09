@@ -1,0 +1,146 @@
+# Help: https://github.com/pashky/restclient.el
+# More examples: https://github.com/pashky/restclient.el/blob/master/examples/httpbin
+# C-c C-v: same as C-c C-c, but doesn't switch focus to other window
+# C-c C-u: copy query under the cursor as a curl command
+# C-h e (view-echo-area-messages): print request header and body
+
+:BASE_URL_GATE_API = http://localhost:8080
+
+# Header
+:REQUEST_HEADER = <<
+Content-Type: application/json
+
+# Actuator
+GET :BASE_URL_GATE_API/actuator
+
+# Actuator health
+GET :BASE_URL_GATE_API/actuator/health
+
+# Actuator info
+GET :BASE_URL_GATE_API/actuator/info
+
+#
+GET :BASE_URL_GATE_API/actuator/prometheus
+
+# Say hello
+GET :BASE_URL_GATE_API/hello
+
+
+# POST SERVICE
+
+
+# Get all posts from Order Service
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to order-service (port 8081)
+# 3. В ответе должны быть HTTP-заголовки, связанные с rate limiting, например: X-RateLimit-Remaining: 19
+# Get all posts
+GET :BASE_URL_GATE_API/post
+
+# Say hello from Order Service
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to order-service (port 8081)
+# 3. В ответе должны быть HTTP-заголовки, связанные с rate limiting, например: X-RateLimit-Remaining: 19
+GET :BASE_URL_GATE_API/post/hello
+
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Get post by id
+GET :BASE_URL_GATE_API/post/953
+
+# Get post by id via GraphQL. Return only specific fields.
+# Всегда отправляется на один POST-эндпоинт
+# Всегда возвращает статус 200 OK.
+# HTTP Level: Статус 200 OK указывает на то, что GraphQL-сервер успешно принял и обработал HTTP-запрос.
+POST :BASE_URL_GATE_API/graphql
+:REQUEST_HEADER
+
+{
+  "query": "query { postById(id: 915) { id title } }"
+}
+
+
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Create new post without comments
+POST :BASE_URL_GATE_API/post/create
+:REQUEST_HEADER
+
+{
+  "title": "Title#1",
+  "comments": []
+}
+
+# 1. Send request to API-Gateway (port 8080)
+# 2. Forward to post-service (port 8081)
+# 3. Create new post with 2 comments
+POST :BASE_URL_GATE_API/post/create
+:REQUEST_HEADER
+
+{
+  "title": "Title#2",
+  "comments": [
+    {
+      "body": "Comments#1, Post with Title#2"
+    },
+    {
+      "body": "Comments#2, Post with Title#2"
+    }
+  ]
+}
+
+# Delete post and whole it comments
+DELETE :BASE_URL_GATE_API/post/209
+
+# Delete comment by id from post
+DELETE :BASE_URL_GATE_API/post/2/comment/2
+
+# Check Elasticsearch (after run Docker container: docker compose -f elk-docker-compose.yml up -d)
+GET http://localhost:9200
+
+# Проверить Elasticsearch после запроса
+GET http://localhost:9200/_cat/indices?v
+
+# можно непосредственно искать лог
+GET http://localhost:9200/microservices-logs-*/_search?pretty
+
+# Проверить Kibana
+GET http://localhost:5601
+
+# Проверить конкретно через Elasticsearch
+# Можно сделать более удобный запрос:
+GET http://localhost:9200/microservices-logs-*/_search?pretty
+:REQUEST_HEADER
+
+{
+    "query": {
+      "match": {
+        "message": "getPostById"
+      }
+    }
+}
+
+
+# Проверить Kibana
+GET http://localhost:5601/api/status
+
+
+# Redis проверки работы Redis в Spring Cloud Gateway.
+# Проверка активного подключения в Health Indicator. В ответе найдите блок redis. Статус должен быть UP:
+GET :BASE_URL_GATE_API/actuator/health/redis
+
+# Проверка срабатывания Rate Limiter (429 Too Many Requests)
+# Поскольку лимитер настроен на replenishRate: 10 и burstCapacity: 20, отправьте пачку быстрых запросов, чтобы превысить лимит:
+# In Bash file
+# Выполнить 30 запросов подряд в цикле
+# for i in {1..30}; do curl -i /dev/null -w "%{http_code}\n" http://localhost:8080/post/757; done
+
+# Ожидаемый результат:
+# Сначала вернутся коды 200 (или статус вашего целевого сервиса), а затем пойдут ответы с кодом 429 (Too Many Requests).
+
+
+# 1.Запустите консоль Redis:
+# redis-cli -a <ваш_пароль_из_vault>
+# 2.Включите режим отслеживания команд в реальном времени:
+# MONITOR
+# 3. Отправьте HTTP-запрос к Gateway (http://localhost:8080/post/1).
+# Результат: В консоли Redis вы увидите выполнение Lua-скрипта Spring Cloud Gateway:
