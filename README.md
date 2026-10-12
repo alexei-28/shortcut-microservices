@@ -43,14 +43,15 @@ Mentor platform - Shortcut: https://shortcut.education/
   
     * Run application: ./gradlew bootRun
     * Validate is application is up: http://localhost:8080/hello
+    * ELK (Elasticsearch, Logstash, Kibana)
     * Prometheus - http://localhost:9090
     * Grafana - http://localhost:3000
     * * Username: admin@localhost
     * * Password: your_secure_password
-    * Jaeger- http://localhost:16686
+    * Jaeger - http://localhost:16686
     * Kibana - http://localhost:5601
     * Vault UI - http://localhost:8200
-    * * Unseal Key Portion - Enter 3 times "Unseal Key x"
+    * * Unseal Key Portion - Enter N times "Unseal Key x"
     * Топ-5 наиболее популярных и функциональных готовых дашбордов Grafana для мониторинга приложений на Spring Boot (через Micrometer и Prometheus)
 
   | # | Dashboard Name                  | Grafana ID | Description |
