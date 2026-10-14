@@ -35,7 +35,7 @@ management:
       probability: 1.0 # трассировать 100% запросов.
   otlp:
     tracing:
-      endpoint: http://localhost:4318/v1/traces
+      endpoint: http://jaeger:4318/v1/traces
 logging:
   level:
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
@@ -48,18 +48,14 @@ logging:
 spring:
   application:
     name: post-service
+
   config:
     import: vault://
-  graphql:
-    path: /graphql
-    graphiql:
-      enabled: true
+
   cloud:
-    # Spring Cloud Vault (secrets)
     vault:
-      uri: http://localhost:8200
-      # Чтобы Spring Boot смог прочитать токен из Vault, ему уже нужен токен для выполнения запроса к Vault API
-      token: ${VAULT_TOKEN} # env variable VAULT_TOKEN
+      uri: http://vault:8200
+      token: ${VAULT_TOKEN}
       kv:
         enabled: true
         backend: secret
@@ -93,7 +89,7 @@ spring:
         highlight_sql: true
         use_sql_comments: true
   datasource:
-    url: jdbc:postgresql://localhost:5435/post_service_db
+    url: jdbc:postgresql://postgres:5432/post_service_db
     driver-class-name: org.postgresql.Driver
     username: ${db.username} # get from Vault
     password: ${db.password} # get from Vault

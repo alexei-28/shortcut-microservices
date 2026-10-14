@@ -22,13 +22,15 @@ GET :BASE_URL_GATE_API/actuator/info
 #
 GET :BASE_URL_GATE_API/actuator/prometheus
 
-# Say hello
+# Say hello from api-gateway
 GET :BASE_URL_GATE_API/hello
 
+# Say hello from post-service
+GET :BASE_URL_GATE_API/post/hello
 
-# POST SERVICE
 
-
+######################### POST SERVICE ########################################
+# 
 # Get all posts from Order Service
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to order-service (port 8081)
@@ -45,7 +47,7 @@ GET :BASE_URL_GATE_API/post/hello
 # 1. Send request to API-Gateway (port 8080)
 # 2. Forward to post-service (port 8081)
 # 3. Get post by id
-GET :BASE_URL_GATE_API/post/1052
+GET :BASE_URL_GATE_API/post/203
 
 # Get post by id via GraphQL. Client specifies exactly what data it needs. Return only specific fields.
 # Всегда отправляется на один POST-эндпоинт и всегда возвращает статус 200 OK.
@@ -54,7 +56,7 @@ POST :BASE_URL_GATE_API/graphql
 :REQUEST_HEADER
 
 {
-  "query": "query { postById(id: 1052) { id title } }"
+  "query": "query { postById(id: 153) { id title } }"
 }
 
 

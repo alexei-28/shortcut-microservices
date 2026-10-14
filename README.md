@@ -4,23 +4,105 @@ Shortcut Microservices test project
 Repo: https://github.com/alexei-28/shortcut-microservices
 
 Mentor platform - Shortcut: https://shortcut.education/
-
 ---
 * **Environment**
-    * Java 21
-    * Gradle: 8.5
-    * Spring Boot: 3.2.9
-    * REST API
-    * GraphQL (client specifies exactly what data it needs)
-    * ELK (стек для сбора, хранения, поиска и визуализации логов)
-    * Jaeger (Позволяет видеть путь одного HTTP-запроса через несколько сервисов) 
-    * Prometheus
-    * Grafana
-    * Vault (secrets)
-    * Redis (NoSQL)
-    * Test tools:
-        * JUnit 5
-        * Testcontainers
+* All services run in separate Docker containers
+* Infrastructured services
+  * ELK (стек для сбора, хранения, поиска и визуализации логов)
+  * Jaeger (Позволяет видеть путь одного HTTP-запроса через несколько сервисов)
+  * Prometheus (Metrics)
+  * Grafana (Dashboards)
+  * Vault (secrets)
+  * Redis (NoSQL)
+  * Vault (secrets)
+* My services
+  * api-gateway
+  * post-service
+* Other
+  * Java 21
+  * Gradle: 8.5
+  * Spring Boot: 3.2.9
+  * REST API
+  * GraphQL (client specifies exactly what data it needs)
+  * Test tools:
+    * JUnit 5
+    * Testcontainers
+
+* Как разблокировать Vault
+* Run ./start-my-services-docker.sh  
+  Automate unseal vault and restart my services.
+* Or do all steps manually
+  In root folder Create file /vault/secrets/unseal-key.txt and add unseal key. Must be in .gitignore.
+
+  Если при первоначальной инициализации ты сохранил unseal keys, используй один из них:
+
+  docker compose exec vault vault operator unseal
+* Проверь, что Vault разблокирован
+
+  docker compose exec vault vault status
+
+* Чтобы полностью пересоздать все контейнеры (с пересборкой образов и применением новых изменений в конфигурации или коде), 
+* выполните следующие команды в терминале из папки с вашим docker-compose.yml:
+
+docker compose down
+
+docker compose up --build -d
+
+* Unseal Vault
+* * Unseal Vault using the unseal key generated in the previous step:
+
+  docker exec -it vault vault operator unseal <your-unseal-key>
+
+*  After unseal vault you need to restart api-gateway and post-service
+
+    docker compose restart api-gateway
+
+    docker compose restart post-service
+
+* Собери и запусти Docker контейнеры 
+
+Из корневого каталога shortcut-microservices:
+1. Проверить Compose на ошибки
+
+     docker compose config
+
+2. Собрать два приложения
+
+   docker compose build api-gateway post-service
+
+3. Запустить все Docker контейнеры
+
+   docker compose up -d
+
+4. Проверить состояние контейнеров
+
+   docker compose ps
+
+5. Посмотреть логи приложений 
+
+   docker compose logs -f api-gateway
+
+   docker compose logs -f post-service
+   
+   Health check api-gateway: http://localhost:8080/actuator/health
+
+   Health check post-service: http://localhost:8081/actuator/health
+
+6. Restart API Gateway (optional)
+
+   docker compose restart api-gateway
+
+7. Restart Post Service(optional)
+
+   docker compose restart post-service
+
+8. Проверь работоспособность
+   После запуска:
+   - api-gateway: http://localhost:8080/actuator/health
+   - post-service: http://localhost:8081/actuator/health
+   - Gateway Actuator: http://localhost:8080/actuator/health
+   - Post Service Actuator: http://localhost:8081/actuator/health
+   - GraphiQL: http://localhost:8080/graphiql — если соответствующий интерфейс включён и путь настроен именно так.
    
 * **Install application environment**
     * Вход в веб-интерфейс (Redis)

@@ -40,3 +40,7 @@ build
 vault/secrets/
 *.vault-secret
 *.vault-token
+
+# Env
+.env
+.env.*

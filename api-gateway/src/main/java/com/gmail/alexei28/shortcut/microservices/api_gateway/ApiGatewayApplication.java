@@ -12,7 +12,7 @@ public class ApiGatewayApplication {
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
 
-        logger.info("\n\n ===== Application started successfully! =====\nAPI-Gateway");
+        logger.info("\n\n ===== Application started successfully! =====\nMY SERVICE: api-gateway");
         logger.info(
                 "\nJava version: {}, Java vendor: {}",
                 System.getProperty("java.version"),

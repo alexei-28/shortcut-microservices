@@ -12,7 +12,7 @@ public class PostServiceApp {
     public static void main(String[] args) {
         SpringApplication.run(PostServiceApp.class, args);
 
-        logger.info("\n\n ===== Application started successfully! =====\nPost Service");
+        logger.info("\n\n ===== Application started successfully! =====\nMY SERVICE: post-service");
         logger.info(
                 "\nJava version: {}, Java vendor: {}",
                 System.getProperty("java.version"),
