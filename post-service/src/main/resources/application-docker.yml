@@ -1,0 +1,13 @@
+# Deployment профиль — для запуска внутри Docker
+spring:
+  cloud:
+    vault:
+      uri: http://vault:8200
+  datasource:
+    # Имя контейнера postgres-db из docker-compose
+    url: jdbc:postgresql://postgres-db:5432/post_service_db
+
+management:
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces

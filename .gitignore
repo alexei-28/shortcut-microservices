@@ -35,3 +35,12 @@ build
 *.iws
 *.ipr
 *.xml
+
+# Vault
+vault/secrets/
+*.vault-secret
+*.vault-token
+
+# Env
+.env
+.env.*
