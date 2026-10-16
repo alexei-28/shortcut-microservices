@@ -1,0 +1,14 @@
+type Query {
+    postById(id: ID!): Post
+}
+
+type Post {
+    id: ID!
+    title: String!
+    comments: [Comment!]!
+}
+
+type Comment {
+    id: ID!
+    body: String!
+}
