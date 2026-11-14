@@ -1,0 +1,79 @@
+# Основной / Development профиль — приложения на хосте (не в Docker-е)
+server:
+  port: 8081
+
+springdoc:
+  api-docs:
+    path: /openapi
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name:post-service}
+      env: ${SPRING_PROFILES_ACTIVE:development}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
+logging:
+  level:
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.springframework.web: DEBUG
+    com.gmail.alexei28.shortcut.microservices: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.boot.autoconfigure.graphql: TRACE
+
+spring:
+  application:
+    name: post-service
+  config:
+    import: vault://
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+  cloud:
+    vault:
+      uri: http://localhost:8200
+      token: ${VAULT_TOKEN}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: post-service  # Указываем Spring Boot где Spring Cloud Vault будет искать секрет
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+        use_sql_comments: true
+  datasource:
+    url: jdbc:postgresql://localhost:5435/post_service_db
+    driver-class-name: org.postgresql.Driver
+    username: ${db.username}
+    password: ${db.password}

@@ -1,0 +1,236 @@
+# Инфраструктурные сервисы работают всегда (по умолчанию),
+# а приложения api-gateway и post-service включаются только при активации профиля deployment.
+version: '3.8'
+
+services:
+  # ==========================================================
+  # ИНФРАСТРУКТУРНЫЕ СЕРВИСЫ (Запускаются всегда по умолчанию)
+  # ==========================================================
+
+  # =====================================================
+  # ELK Stack (Elasticsearch, Logstash, Kibana)
+  # =====================================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - app-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    restart: always
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+
+  # =====================================================
+  # Jaeger - позволяет увидеть весь путь одного запроса.
+  # =====================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    restart: always
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - app-network
+
+  # =====================================================
+  # PostgreSQL (Post-Service)
+  # =====================================================
+  postgres-db:
+    image: postgres:16
+    container_name: post-service-postgresql
+    restart: always
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # ==========================================
+  # Prometheus & Grafana
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    restart: always
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: always
+    networks:
+      - app-network
+
+  # ==========================================
+  # Redis & RedisInsight(GUI)
+  # ==========================================
+  redis:
+    image: redis:alpine
+    container_name: redis_app
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command:
+      - redis-server
+      - --save
+      - "60"
+      - "1"
+      - --loglevel
+      - warning
+      - --requirepass
+      - ${REDIS_PASSWORD}
+    networks:
+      - app-network
+
+  # Redis GUI client
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis_insight
+    restart: always
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis_insight_data:/data
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  # ==========================================
+  # Vault (secrets)
+  # ==========================================
+  vault:
+    image: hashicorp/vault:1.20
+    container_name: vault
+    restart: always
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    volumes:
+      - vault-data:/vault/data
+      - ./vault/config:/vault/config
+    command: vault server -config=/vault/config/vault.hcl
+    networks:
+      - app-network
+
+
+
+  # ==========================================================
+  # ПРИКЛАДНЫЕ СЕРВИСЫ (Запускаются ТОЛЬКО в профиле deployment)
+  # ==========================================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    restart: always
+    profiles: ["deployment"]
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_VAULT_URI=http://vault:8200 # SPRING_CLOUD_VAULT_URI - встроенное стандартное свойство Spring Cloud Vault
+      - VAULT_TOKEN=${VAULT_TOKEN} # get from .env, чтобы приложение могло авторизоваться в Vault
+      # В Vault должен находится секрет redis.password по адресу /v1/secret/data/api-gateway
+      # Приложение само обратится к Vault, заберет redis.password и настроит подключение к Redis.
+      #- redis.password=xxx
+    depends_on:
+      - redis
+      - vault
+      - jaeger
+    networks:
+      - app-network
+
+  post-service:
+    build:
+      context: .
+      dockerfile: post-service/Dockerfile
+    container_name: post-service
+    restart: always
+    profiles: ["deployment"]
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_VAULT_URI=http://vault:8200 # SPRING_CLOUD_VAULT_URI - встроенное стандартное свойство Spring Cloud Vault
+      - VAULT_TOKEN=${VAULT_TOKEN} # get from .env, чтобы приложение могло авторизоваться в Vault
+      # В Vault должны находится секреты db.user, db.password по адресу /v1/secret/data/post-service
+      # Приложение само обратится к Vault, заберет db.username, db.password и настроит подключение к PostgreSQL.
+      #- db.username=xxx
+      #- db.password=xxx
+    depends_on:
+      - postgres-db
+      - vault
+      - jaeger
+    networks:
+      - app-network
+
+# ==========================================
+# Volumes & Networks
+# ==========================================
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+  redis_data:
+  redis_insight_data:
+  vault-data:
+
+networks:
+  app-network:
+    driver: bridge

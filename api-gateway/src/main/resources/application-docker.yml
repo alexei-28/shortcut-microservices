@@ -1,0 +1,20 @@
+# Deployment профиль — для запуска внутри Docker
+spring:
+  data:
+    redis:
+      host: redis # Имя сервиса в Docker сети
+  cloud:
+    gateway:
+      routes:
+        - id: post-service
+          # Внутри Docker сети обращаемся по имени контейнера post-service
+          uri: http://post-service:8081
+          predicates:
+            - Path=/post/**,/graphql
+    vault:
+      uri: http://vault:8200 # Имя сервиса Vault в Docker сети
+
+management:
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces # Имя сервиса Jaeger в Docker сети
